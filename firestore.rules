@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read and write their own user profile
+    match /usuarios/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+
+    // Allow authenticated users to read parking zones (public data)
+    match /parkingZones/{zoneId} {
+      allow read: if request.auth != null;
+      
+      // Allow authenticated users to read and update slots within zones
+      match /slots/{slotId} {
+        allow read: if request.auth != null;
+        allow update: if request.auth != null;
+      }
+    }
+
+    // Allow authenticated users to read their own reservations
+    match /reservations/{reservationId} {
+      allow read, write: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        request.resource.data.userId == request.auth.uid
+      );
+    }
+  }
+}
