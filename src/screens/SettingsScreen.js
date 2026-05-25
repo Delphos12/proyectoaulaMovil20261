@@ -1,23 +1,25 @@
 import { useState } from "react";
 import {
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Card, CardBody, CardHeader, Input } from "../components";
 import { COLORS } from "../constants";
-import { useAuth } from "../hooks";
+import { useAuth, useTheme } from "../hooks";
 import { updateUserProfile } from "../services/authService";
 import { setUser } from "../store";
 
 export default function SettingsScreen({ navigation }) {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { isDarkMode, colors, toggleDarkMode } = useTheme();
   const { logout } = useAuth();
   const [editable, setEditable] = useState(false);
   const [userData, setUserData] = useState({
@@ -26,6 +28,13 @@ export default function SettingsScreen({ navigation }) {
     email: user?.email || "",
     phone: user?.phone || "",
   });
+
+  const settingsOptions = [
+    { label: "Notificaciones", screen: "NotificationsSettings" },
+    { label: "Privacidad", screen: "PrivacySettings" },
+    { label: "Historial de Reservas", screen: "ReservationsHistory" },
+    { label: "Ayuda y Soporte", screen: "HelpAndSupport" },
+  ];
 
   const handleChange = (field, value) =>
     setUserData({ ...userData, [field]: value });
@@ -47,10 +56,6 @@ export default function SettingsScreen({ navigation }) {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
   const displayName =
     `${userData.firstName} ${userData.lastName}`.trim() ||
     user?.nombre ||
@@ -58,14 +63,16 @@ export default function SettingsScreen({ navigation }) {
     "Usuario";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surface }]}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>Mi Perfil</Text>
+          <Text style={[styles.title, { color: colors.dark }]}>Mi Perfil</Text>
         </View>
 
-        <Card>
-          <CardHeader title={displayName} />
+        <Card colors={colors}>
+          <CardHeader title={displayName} colors={colors} />
           <CardBody>
             {editable ? (
               <>
@@ -73,18 +80,26 @@ export default function SettingsScreen({ navigation }) {
                   label="Nombre"
                   value={userData.firstName}
                   onChangeText={(v) => handleChange("firstName", v)}
+                  colors={colors}
                 />
                 <Input
                   label="Apellido"
                   value={userData.lastName}
                   onChangeText={(v) => handleChange("lastName", v)}
+                  colors={colors}
                 />
-                <Input label="Correo" value={userData.email} editable={false} />
+                <Input
+                  label="Correo"
+                  value={userData.email}
+                  editable={false}
+                  colors={colors}
+                />
                 <Input
                   label="Teléfono"
                   value={userData.phone}
                   onChangeText={(v) => handleChange("phone", v)}
                   keyboardType="phone-pad"
+                  colors={colors}
                 />
                 <View style={styles.buttonGroup}>
                   <Button
@@ -104,12 +119,18 @@ export default function SettingsScreen({ navigation }) {
             ) : (
               <>
                 <View style={styles.profileItem}>
-                  <Text style={styles.label}>Correo:</Text>
-                  <Text style={styles.value}>{userData.email}</Text>
+                  <Text style={[styles.label, { color: colors.gray }]}>
+                    Correo:
+                  </Text>
+                  <Text style={[styles.value, { color: colors.dark }]}>
+                    {userData.email}
+                  </Text>
                 </View>
                 <View style={styles.profileItem}>
-                  <Text style={styles.label}>Teléfono:</Text>
-                  <Text style={styles.value}>
+                  <Text style={[styles.label, { color: colors.gray }]}>
+                    Teléfono:
+                  </Text>
+                  <Text style={[styles.value, { color: colors.dark }]}>
                     {userData.phone || "No especificado"}
                   </Text>
                 </View>
@@ -124,16 +145,38 @@ export default function SettingsScreen({ navigation }) {
         </Card>
 
         <View style={styles.settingsContainer}>
-          <Text style={styles.sectionTitle}>Configuración</Text>
-          {[
-            "Notificaciones",
-            "Privacidad",
-            "Historial de Reservas",
-            "Ayuda y Soporte",
-          ].map((item) => (
-            <TouchableOpacity key={item} style={styles.settingItem}>
-              <Text style={styles.settingLabel}>{item}</Text>
-              <Text style={styles.settingArrow}>›</Text>
+          <Text style={[styles.sectionTitle, { color: colors.dark }]}>
+            Tema
+          </Text>
+          <View style={[styles.themeToggle, { backgroundColor: colors.white }]}>
+            <View style={styles.themeContent}>
+              <Text style={[styles.themeLabelText, { color: colors.dark }]}>
+                {isDarkMode ? "🌙 Modo Oscuro" : "☀️ Modo Claro"}
+              </Text>
+            </View>
+            <Switch
+              value={isDarkMode}
+              onValueChange={toggleDarkMode}
+              trackColor={{ false: colors.lightGray, true: colors.primary }}
+              thumbColor={isDarkMode ? colors.primary : colors.gray}
+            />
+          </View>
+
+          <Text style={[styles.sectionTitle, { color: colors.dark }]}>
+            Configuración
+          </Text>
+          {settingsOptions.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={[styles.settingItem, { backgroundColor: colors.white }]}
+              onPress={() => navigation.navigate(item.screen)}
+            >
+              <Text style={[styles.settingLabel, { color: colors.dark }]}>
+                {item.label}
+              </Text>
+              <Text style={[styles.settingArrow, { color: colors.gray }]}>
+                ›
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -141,7 +184,7 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.logoutContainer}>
           <Button
             title="Cerrar Sesión"
-            onPress={handleLogout}
+            onPress={logout}
             variant="danger"
             size="large"
           />
@@ -171,6 +214,20 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     marginLeft: 4,
   },
+  themeToggle: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: 0,
+    borderRadius: 0,
+  },
+  themeContent: { flex: 1, marginRight: 12 },
+  themeLabelText: { fontSize: 14, color: COLORS.dark, fontWeight: "500" },
   settingItem: {
     backgroundColor: COLORS.white,
     paddingHorizontal: 16,

@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="assets/images/logo.png" alt="ParkSmart Logo" width="200" height="200" />
+</div>
+
 # ParkSmart
 
 Aplicación móvil para la gestión inteligente de parqueaderos, desarrollada con React Native y Firebase.
@@ -182,9 +186,159 @@ Notas Técnicas
 **Colores**: Paleta de 15 colores predefinida en `src/constants.js`
 **Componentes**: Reutilizables y sin dependencias externas más allá de React Native
 
-Próximas Mejoras (Futura Entrega 3)
-[ ] Notificaciones cuando una reserva expira
+---
+
+Tercer Entregable - Panel de Gestión Admin, Control de Ingreso/Salida, Historial Avanzado y Alertas
+
+Funcionalidades Implementadas
+
+1. **Panel de Gestión de Cupos (Admin/Demo)**
+   - Crear nuevos cupos con número, tipo y estado
+   - Editar cupos existentes
+   - Eliminar cupos del sistema
+   - Persistencia automática en Firestore
+   - Selección de tipo de cupo: regular, discapacitado, carga
+   - Selección de estado: disponible, reservado, ocupado
+
+2. **Control de Ingreso/Salida**
+   - Marcar reserva como "En uso" desde el detalle
+   - Marcar reserva como "Finalizado" desde el detalle
+   - Validación: Solo se pueden marcar reservas en estado "Reservado" como "En uso"
+   - Validación: Solo se pueden marcar como "Finalizado" si están "En uso"
+   - Estados completamente funcionales:
+     - **Reservado** (Verde primario) → Disponible para iniciar
+     - **En Uso** (Verde éxito) → Reserva en progreso
+     - **Finalizado** (Azul info) → Reserva completada
+     - **Cancelado** (Rojo) → Reserva cancelada
+
+3. **Historial de Reservas con Filtros Avanzados**
+   - Filtros por estado: Activas / Históricas / Todas
+   - Filtros por fecha:
+     - **Hoy**: Reservas del día actual
+     - **Esta Semana**: Reservas de la semana en curso
+     - **Este Mes**: Reservas del mes actual
+     - **Todos**: Sin filtro de fecha
+   - Búsqueda en tiempo real por nombre de zona
+   - Combinación de múltiples filtros simultáneamente
+
+4. **Alertas Informativas**
+   - AlertBanner componente para notificaciones visuales
+   - Alerta: "Tienes una reserva próxima" cuando hay reservas activas sin comenzar
+   - Alerta cerrable por usuario
+   - Sistema preparado para mostrar alertas en momentos clave del flujo
+   - Colores diferenciados: info, success, warning, error
+
+### Pasos para Probar las Funcionalidades de Entrega 3
+
+**Paso 1: Acceder al Panel Admin de Cupos**
+
+1. Ir a "Parking" → "Zonas"
+2. Seleccionar una zona (ej: Zona Centro)
+3. Búscar un botón de "Gestionar Cupos" o acceder por menú admin (si tiene rol demo/admin)
+4. Verá lista de cupos actuales
+
+**Paso 2: Crear un Nuevo Cupo**
+
+1. En el Panel Admin → Presionar "+ Agregar Cupo"
+2. Completar:
+   - **Número de Cupo**: Ej "A-005"
+   - **Tipo**: Seleccionar entre regular, discapacitado, carga
+   - **Estado**: Seleccionar entre disponible, reservado, ocupado
+3. Presionar "Guardar"
+4. El cupo aparecerá inmediatamente en la lista
+
+**Paso 3: Editar un Cupo Existente**
+
+1. En el Panel Admin → Seleccionar un cupo
+2. Presionar "Editar"
+3. Modificar los datos
+4. Presionar "Guardar"
+5. Los cambios se reflejan en Firestore
+
+**Paso 4: Eliminar un Cupo**
+
+1. En el Panel Admin → Seleccionar un cupo
+2. Presionar "Eliminar"
+3. Confirmar en el diálogo
+4. El cupo se elimina del sistema
+
+**Paso 5: Control de Ingreso (Marcar como "En Uso")**
+
+1. Ir a "Reservas" → tab "Activas"
+2. Seleccionar una reserva en estado **"Reservado"**
+3. Presionar botón "Marcar: En Uso"
+4. Confirmar en el diálogo
+5. El estado cambia a **"En Uso"** (color verde)
+6. Ahora solo se puede "Marcar como Finalizado"
+
+**Paso 6: Control de Salida (Marcar como "Finalizado")**
+
+1. En la misma reserva ahora en estado **"En Uso"**
+2. Presionar botón "Marcar: Finalizado"
+3. Confirmar en el diálogo
+4. El estado cambia a **"Finalizado"** (color azul)
+5. La reserva se mueve al tab "Históricas"
+
+**Paso 7: Filtrar Historial por Fecha**
+
+1. Ir a "Reservas"
+2. Utilizar los botones de filtro de fecha:
+   - **Hoy**: Muestra solo reservas de hoy
+   - **Esta Semana**: Muestra reservas de los últimos 7 días
+   - **Este Mes**: Muestra reservas del mes actual
+   - **Todos**: Sin filtro (muestra todas las reservas)
+3. Los filtros se pueden combinar con los filtros de estado (Activas/Históricas)
+
+**Paso 8: Buscar Reservas por Zona**
+
+1. En "Reservas" → Escribir en la barra de búsqueda
+2. Escribir el nombre de una zona (ej "Centro")
+3. Las reservas se filtran en tiempo real
+4. El filtro funciona con todos los otros filtros activos
+
+**Paso 9: Ver Alertas Informativas**
+
+1. Ir a "Reservas" con reservas activas pendientes
+2. Una alerta aparecerá en la parte superior: " Tienes una reserva próxima..."
+3. Presionar el botón ✕ para cerrar la alerta
+4. La alerta reaparece si hay nuevas reservas próximas
+
+### Estados de Reserva Completos (Entrega 3)
+
+### Arquitectura de Entrega 3
+
+**Nuevas Funciones en parkingService**:
+
+- `updateSlot(zoneId, slotId, updates)` - Editar cupo
+- `deleteSlot(zoneId, slotId)` - Eliminar cupo
+
+**Nuevos Thunks en store.js**:
+
+- `markReservationAsInUseThunk` - Marcar reserva en uso
+- `completeReservationThunk` - Marcar reserva finalizada
+
+**Nuevos Componentes en components.js**:
+
+- `Modal` - Componente modal personalizado
+- `AlertBanner` - Componente de alertas informativas
+
+**Nuevas Pantallas**:
+
+- `AdminPanelScreen.js` - Gestión de cupos por zona
+
+**Nuevas Utilidades en utils.js**:
+
+- `isToday(date)` - Verificar si es hoy
+- `isThisWeek(date)` - Verificar si es esta semana
+- `isThisMonth(date)` - Verificar si es este mes
+- `isUpcoming(date)` - Verificar si es una fecha futura
+
+---
+
+Próximas Mejoras (Futuras Entregas)
+[ ] Notificaciones push para cambios de estado
 [ ] Historial de pagos y facturación
 [ ] Valoración y comentarios de zonas
 [ ] Mapas interactivos con ubicación de zonas
 [ ] Extensión de reservas activas
+[ ] Estadísticas y reportes de ocupación

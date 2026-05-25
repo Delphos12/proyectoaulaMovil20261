@@ -1,40 +1,60 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-    FlatList,
-    RefreshControl,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import {
-    Button,
-    Card,
-    CardBody,
-    CardHeader,
-    SearchBar,
-    SegmentedButtons,
+  AlertBanner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  SearchBar,
+  SegmentedButtons,
 } from "../components";
 import { COLORS } from "../constants";
 import { useReservation } from "../hooks";
 import {
-    formatCurrency,
-    formatDate,
-    formatTime,
-    getDurationHours,
+  formatCurrency,
+  formatDate,
+  formatTime,
+  getDurationHours,
+  isThisMonth,
+  isThisWeek,
+  isToday,
+  isUpcoming,
 } from "../utils";
 
 export default function ReservationsScreen({ navigation }) {
   const { reservations, isLoading, fetchReservations } = useReservation();
   const { user } = useSelector((state) => state.auth);
   const [filterTab, setFilterTab] = useState("activas");
+  const [dateFilter, setDateFilter] = useState("todos");
   const [searchZone, setSearchZone] = useState("");
+  const [alertMessage, setAlertMessage] = useState(null);
 
   useEffect(() => {
     if (user?.uid) fetchReservations(user.uid);
   }, [user?.uid]);
+
+  useEffect(() => {
+    // Mostrar alertas de reservas próximas
+    const upcomingReservations = reservations.filter(
+      (r) => r.status === "reserved" && isUpcoming(r.startTime),
+    );
+    if (upcomingReservations.length > 0) {
+      const first = upcomingReservations[0];
+      setAlertMessage(
+        `📅 Tienes una reserva próxima en ${first.zoneName || "zona"}`,
+      );
+    }
+  }, [reservations]);
 
   const onRefresh = () => {
     if (user?.uid) fetchReservations(user.uid);
@@ -43,6 +63,7 @@ export default function ReservationsScreen({ navigation }) {
   const filteredReservations = useMemo(() => {
     let filtered = reservations;
 
+    // Filtro por estado
     if (filterTab === "activas") {
       filtered = filtered.filter((r) =>
         ["reserved", "in_use"].includes(r.status),
@@ -53,6 +74,16 @@ export default function ReservationsScreen({ navigation }) {
       );
     }
 
+    // Filtro por fecha
+    if (dateFilter === "hoy") {
+      filtered = filtered.filter((r) => isToday(r.startTime));
+    } else if (dateFilter === "semana") {
+      filtered = filtered.filter((r) => isThisWeek(r.startTime));
+    } else if (dateFilter === "mes") {
+      filtered = filtered.filter((r) => isThisMonth(r.startTime));
+    }
+
+    // Búsqueda por zona
     if (searchZone) {
       filtered = filtered.filter((r) =>
         (r.zoneName || "").toLowerCase().includes(searchZone.toLowerCase()),
@@ -60,7 +91,7 @@ export default function ReservationsScreen({ navigation }) {
     }
 
     return filtered;
-  }, [reservations, filterTab, searchZone]);
+  }, [reservations, filterTab, dateFilter, searchZone]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -149,6 +180,14 @@ export default function ReservationsScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {alertMessage && (
+        <AlertBanner
+          type="info"
+          message={alertMessage}
+          onClose={() => setAlertMessage(null)}
+          visible={!!alertMessage}
+        />
+      )}
       <SegmentedButtons
         options={[
           { label: "Activas", value: "activas" },
@@ -157,6 +196,17 @@ export default function ReservationsScreen({ navigation }) {
         ]}
         value={filterTab}
         onChange={setFilterTab}
+      />
+      <SegmentedButtons
+        options={[
+          { label: "Todos", value: "todos" },
+          { label: "Hoy", value: "hoy" },
+          { label: "Esta Semana", value: "semana" },
+          { label: "Este Mes", value: "mes" },
+        ]}
+        value={dateFilter}
+        onChange={setDateFilter}
+        style={{ marginTop: 0 }}
       />
       <SearchBar
         placeholder="Buscar por zona..."

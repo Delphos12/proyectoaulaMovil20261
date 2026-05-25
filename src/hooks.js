@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { auth } from "./config/firebase";
 import {
     cancelReservationThunk,
+    completeReservationThunk,
     createReservationThunk,
     fetchActiveReservations,
     fetchHistoricReservations,
@@ -10,6 +11,7 @@ import {
     fetchSlots,
     fetchZones,
     logoutDone,
+    markReservationAsInUseThunk,
     persistor,
 } from "./store";
 
@@ -74,5 +76,21 @@ export const useReservation = () => {
       dispatch(fetchHistoricReservations(userId)),
     cancelReservation: (reservationId, slotId, zoneId, userId) =>
       dispatch(cancelReservationThunk({ reservationId, userId })),
+    markReservationAsInUse: (reservationId, userId) =>
+      dispatch(markReservationAsInUseThunk({ reservationId, userId })),
+    completeReservation: (reservationId, userId) =>
+      dispatch(completeReservationThunk({ reservationId, userId })),
+  };
+};
+
+export const useTheme = () => {
+  const dispatch = useDispatch();
+  const { isDarkMode } = useSelector((state) => state.theme);
+  const { COLORS_LIGHT, COLORS_DARK } = require("./constants");
+
+  return {
+    isDarkMode,
+    colors: isDarkMode ? COLORS_DARK : COLORS_LIGHT,
+    toggleDarkMode: () => dispatch(require("./store").toggleDarkMode()),
   };
 };

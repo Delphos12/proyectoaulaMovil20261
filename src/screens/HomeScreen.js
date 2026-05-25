@@ -1,21 +1,21 @@
 import { useEffect } from "react";
 import {
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Card } from "../components";
-import { COLORS } from "../constants";
-import { useParking, useReservation } from "../hooks";
+import { useParking, useReservation, useTheme } from "../hooks";
 import { getTimeago } from "../utils";
 
 export default function HomeScreen({ navigation }) {
   const { user } = useSelector((state) => state.auth);
+  const { isDarkMode, colors } = useTheme();
   const { zones, isLoading: zonesLoading, fetchZones } = useParking();
   const {
     reservations,
@@ -34,54 +34,67 @@ export default function HomeScreen({ navigation }) {
     if (user?.uid) fetchReservations(user.uid);
   };
 
-  const StatCard = ({ label, value, color = COLORS.primary }) => (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <Text style={styles.statLabel}>{label}</Text>
+  const StatCard = ({ label, value, color = colors.primary }) => (
+    <View
+      style={[
+        styles.statCard,
+        { borderLeftColor: color, backgroundColor: colors.white },
+      ]}
+    >
+      <Text style={[styles.statLabel, { color: colors.gray }]}>{label}</Text>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surface }]}
+    >
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.greeting}>
+        <View style={[styles.header, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.greeting, { color: colors.text }]}>
             Hola, {user?.nombre || user?.firstName || "Usuario"}
           </Text>
-          <Text style={styles.subtitle}>Bienvenido a Smart Parking</Text>
+          <Text style={[styles.subtitle, { color: colors.gray }]}>
+            Bienvenido a Smart Parking
+          </Text>
         </View>
 
         <View style={styles.statsContainer}>
           <StatCard
             label="Zonas"
             value={zones.length.toString()}
-            color={COLORS.primary}
+            color={colors.primary}
           />
           <StatCard
             label="Reservas"
             value={reservations
               .filter((r) => r.status === "active")
               .length.toString()}
-            color={COLORS.secondary}
+            color={colors.secondary}
           />
           <StatCard
             label="Completadas"
             value={reservations
               .filter((r) => r.status === "completed")
               .length.toString()}
-            color={COLORS.success}
+            color={colors.success}
           />
         </View>
 
-        <View style={styles.actionsContainer}>
-          <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+        <View
+          style={[styles.actionsContainer, { backgroundColor: colors.surface }]}
+        >
+          <Text style={[styles.sectionTitle, { color: colors.dark }]}>
+            Acciones Rápidas
+          </Text>
           <TouchableOpacity
-            style={styles.actionButton}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={() =>
               navigation.navigate("Parking", { screen: "ParkingZones" })
             }
@@ -89,24 +102,43 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.actionButtonText}>Buscar Estacionamiento</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionButton, styles.secondaryAction]}
+            style={[
+              styles.actionButton,
+              styles.secondaryAction,
+              { backgroundColor: colors.white, borderColor: colors.lightGray },
+            ]}
             onPress={() => navigation.navigate("Reservations")}
           >
-            <Text style={[styles.actionButtonText, styles.secondaryActionText]}>
+            <Text
+              style={[
+                styles.actionButtonText,
+                styles.secondaryActionText,
+                { color: colors.primary },
+              ]}
+            >
               Mis Reservas
             </Text>
           </TouchableOpacity>
         </View>
 
         {reservations.length > 0 && (
-          <View style={styles.recentContainer}>
-            <Text style={styles.sectionTitle}>Reservas Recientes</Text>
+          <View
+            style={[
+              styles.recentContainer,
+              { backgroundColor: colors.surface },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.dark }]}>
+              Reservas Recientes
+            </Text>
             {reservations.slice(0, 3).map((reservation) => (
-              <Card key={reservation.id}>
-                <Text style={styles.reservationZone}>
+              <Card key={reservation.id} colors={colors}>
+                <Text style={[styles.reservationZone, { color: colors.dark }]}>
                   {reservation.zoneName || `Zona ${reservation.zoneId}`}
                 </Text>
-                <Text style={styles.reservationStatus}>
+                <Text
+                  style={[styles.reservationStatus, { color: colors.gray }]}
+                >
                   {{
                     active: "Activa",
                     completed: "Completada",
@@ -127,14 +159,14 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1, backgroundColor: "#F3F4F6" },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 24,
-    backgroundColor: COLORS.white,
+    backgroundColor: "#FFFFFF",
   },
-  greeting: { fontSize: 24, fontWeight: "700", color: COLORS.dark },
-  subtitle: { fontSize: 14, color: COLORS.gray, marginTop: 4 },
+  greeting: { fontSize: 24, fontWeight: "700", color: "#1F2937" },
+  subtitle: { fontSize: 14, color: "#6B7280", marginTop: 4 },
   statsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 16,
@@ -143,44 +175,44 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: "#FFFFFF",
     padding: 12,
     borderRadius: 8,
     marginHorizontal: 4,
     borderLeftWidth: 4,
   },
-  statLabel: { fontSize: 12, color: COLORS.gray, marginBottom: 4 },
+  statLabel: { fontSize: 12, color: "#6B7280", marginBottom: 4 },
   statValue: { fontSize: 20, fontWeight: "700" },
   actionsContainer: { paddingHorizontal: 16, marginVertical: 16 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: COLORS.dark,
+    color: "#1F2937",
     marginBottom: 12,
   },
   actionButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#00B992",
     padding: 14,
     borderRadius: 8,
     marginBottom: 10,
   },
   secondaryAction: {
-    backgroundColor: COLORS.white,
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: COLORS.lightGray,
+    borderColor: "#E5E7EB",
   },
   actionButtonText: {
-    color: COLORS.white,
+    color: "#FFFFFF",
     fontWeight: "600",
     fontSize: 14,
     textAlign: "center",
   },
-  secondaryActionText: { color: COLORS.primary },
+  secondaryActionText: { color: "#00B992" },
   recentContainer: { paddingHorizontal: 16, paddingBottom: 32 },
-  reservationZone: { fontSize: 14, fontWeight: "600", color: COLORS.dark },
+  reservationZone: { fontSize: 14, fontWeight: "600", color: "#1F2937" },
   reservationStatus: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: "#6B7280",
     marginTop: 4,
     textTransform: "capitalize",
   },

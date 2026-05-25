@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Button, Card, CardBody, CardHeader } from "../components";
@@ -24,7 +24,17 @@ export default function ReservationDetailScreen({ route, navigation }) {
   );
   const [reservation, setReservation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { isCancelling, cancelError, cancelReservation } = useReservation();
+  const {
+    isCancelling,
+    cancelError,
+    cancelReservation,
+    isMarkingInUse,
+    markInUseError,
+    markReservationAsInUse,
+    isCompleting,
+    completeError,
+    completeReservation,
+  } = useReservation();
   const [cancellationAttempted, setCancellationAttempted] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
@@ -100,6 +110,38 @@ export default function ReservationDetailScreen({ route, navigation }) {
     setShowCancelConfirm(false);
   };
 
+  const handleMarkAsInUse = () => {
+    Alert.alert(
+      "Marcar como 'En Uso'",
+      "¿Deseas marcar esta reserva como 'En uso'?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Confirmar",
+          onPress: () => {
+            markReservationAsInUse(reservationId, user?.uid);
+          },
+        },
+      ],
+    );
+  };
+
+  const handleMarkAsCompleted = () => {
+    Alert.alert(
+      "Marcar como 'Finalizado'",
+      "¿Deseas marcar esta reserva como 'Finalizado'?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Confirmar",
+          onPress: () => {
+            completeReservation(reservationId, user?.uid);
+          },
+        },
+      ],
+    );
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "reserved":
@@ -128,6 +170,10 @@ export default function ReservationDetailScreen({ route, navigation }) {
     })[status] || status;
 
   const canCancelReservation = reservation?.status === "reserved";
+
+  const canMarkAsInUse = reservation?.status === "reserved";
+
+  const canMarkAsCompleted = reservation?.status === "in_use";
 
   if (loading) {
     return (
@@ -235,6 +281,24 @@ export default function ReservationDetailScreen({ route, navigation }) {
       ) : null}
 
       <View style={styles.buttonContainer}>
+        {canMarkAsInUse && (
+          <Button
+            title="Marcar: En Uso"
+            variant="success"
+            onPress={handleMarkAsInUse}
+            size="large"
+            loading={isMarkingInUse}
+          />
+        )}
+        {canMarkAsCompleted && (
+          <Button
+            title="Marcar: Finalizado"
+            variant="secondary"
+            onPress={handleMarkAsCompleted}
+            size="large"
+            loading={isCompleting}
+          />
+        )}
         {canCancelReservation ? (
           <>
             <Button
@@ -252,9 +316,7 @@ export default function ReservationDetailScreen({ route, navigation }) {
               disabled={isCancelling}
               activeOpacity={0.8}
             >
-              <Text style={styles.destructiveButtonText}>
-                 Cancelar Reserva
-              </Text>
+              <Text style={styles.destructiveButtonText}>Cancelar Reserva</Text>
               {isCancelling && (
                 <ActivityIndicator
                   color={COLORS.white}

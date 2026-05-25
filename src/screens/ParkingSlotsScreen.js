@@ -9,14 +9,14 @@ import {
     View,
 } from "react-native";
 import { Button, Card, SegmentedButtons } from "../components";
-import { COLORS } from "../constants";
-import { useParking } from "../hooks";
+import { useParking, useTheme } from "../hooks";
 
 export default function ParkingSlotsScreen({ route, navigation }) {
   const { zoneId, zoneName, pricePerHour } = route.params;
   const { selectedSlots: slots, isLoading, fetchSlots } = useParking();
   const [statusFilter, setStatusFilter] = useState("todos");
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState("todos");
+  const { colors } = useTheme();
 
   useEffect(() => {
     fetchSlots(zoneId);
@@ -59,13 +59,13 @@ export default function ParkingSlotsScreen({ route, navigation }) {
   const getSlotColor = (status) => {
     switch (status) {
       case "available":
-        return COLORS.success;
+        return colors.success;
       case "occupied":
-        return COLORS.danger;
+        return colors.danger;
       case "reserved":
-        return COLORS.warning;
+        return colors.warning;
       default:
-        return COLORS.gray;
+        return colors.gray;
     }
   };
 
@@ -88,11 +88,15 @@ export default function ParkingSlotsScreen({ route, navigation }) {
       }
       style={styles.slotTouchable}
     >
-      <Card style={styles.slotCard}>
+      <Card style={styles.slotCard} colors={colors}>
         <View style={styles.slotContent}>
           <View style={styles.slotInfo}>
-            <Text style={styles.slotNumber}>Cupo {item.slotNumber}</Text>
-            <Text style={styles.slotType}>{item.type || "Estándar"}</Text>
+            <Text style={[styles.slotNumber, { color: colors.text }]}>
+              Cupo {item.slotNumber}
+            </Text>
+            <Text style={[styles.slotType, { color: colors.gray }]}>
+              {item.type || "Estándar"}
+            </Text>
           </View>
           <View
             style={[
@@ -100,7 +104,9 @@ export default function ParkingSlotsScreen({ route, navigation }) {
               { backgroundColor: getSlotColor(item.status) },
             ]}
           >
-            <Text style={styles.statusText}>{getStatusLabel(item.status)}</Text>
+            <Text style={[styles.statusText, { color: colors.white }]}>
+              {getStatusLabel(item.status)}
+            </Text>
           </View>
         </View>
         {item.status === "available" && (
@@ -124,9 +130,13 @@ export default function ParkingSlotsScreen({ route, navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{zoneName}</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surface }]}
+    >
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {zoneName}
+        </Text>
       </View>
       <SegmentedButtons
         options={[
@@ -160,7 +170,7 @@ export default function ParkingSlotsScreen({ route, navigation }) {
         numColumns={2}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: colors.gray }]}>
               No hay cupos {statusFilter === "todos" ? "" : statusFilter}
             </Text>
           </View>
@@ -171,13 +181,12 @@ export default function ParkingSlotsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1 },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: COLORS.white,
   },
-  headerTitle: { fontSize: 20, fontWeight: "700", color: COLORS.dark },
+  headerTitle: { fontSize: 20, fontWeight: "700" },
   listContent: { padding: 8, paddingBottom: 32 },
   slotTouchable: { flex: 1, margin: 4 },
   slotCard: { marginHorizontal: 0, marginVertical: 0 },
@@ -188,11 +197,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   slotInfo: { flex: 1 },
-  slotNumber: { fontSize: 16, fontWeight: "700", color: COLORS.dark },
-  slotType: { fontSize: 12, color: COLORS.gray, marginTop: 2 },
+  slotNumber: { fontSize: 16, fontWeight: "700" },
+  slotType: { fontSize: 12, marginTop: 2 },
   slotStatus: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   statusText: {
-    color: COLORS.white,
     fontSize: 12,
     fontWeight: "600",
     textTransform: "capitalize",
@@ -203,5 +211,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     minHeight: 300,
   },
-  emptyText: { color: COLORS.gray, fontSize: 16 },
+  emptyText: { fontSize: 16 },
 });

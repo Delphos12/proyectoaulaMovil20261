@@ -37,3 +37,23 @@ export const getDurationHours = (start, end) => {
   if (!start || !end) return 0;
   return dayjs(end).diff(dayjs(start), "hour", true);
 };
+
+export const isToday = (date) => {
+  if (!date) return false;
+  return dayjs(date).isSame(dayjs(), "day");
+};
+
+export const isThisWeek = (date) => {
+  if (!date) return false;
+  return dayjs(date).isSame(dayjs(), "week");
+};
+
+export const isThisMonth = (date) => {
+  if (!date) return false;
+  return dayjs(date).isSame(dayjs(), "month");
+};
+
+export const isUpcoming = (date) => {
+  if (!date) return false;
+  return dayjs(date).isAfter(dayjs());
+};

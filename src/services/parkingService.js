@@ -1,15 +1,16 @@
 ﻿import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  orderBy,
-  query,
-  serverTimestamp,
-  updateDoc,
-  where,
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getDocs,
+    onSnapshot,
+    orderBy,
+    query,
+    serverTimestamp,
+    updateDoc,
+    where,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -145,6 +146,29 @@ export const parkingService = {
       return { success: true, slotId: docRef.id };
     } catch (error) {
       console.error("createSlot:", error.message);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async updateSlot(zoneId, slotId, updates) {
+    try {
+      await updateDoc(doc(db, "parkingZones", zoneId, "slots", slotId), {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("updateSlot:", error.message);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async deleteSlot(zoneId, slotId) {
+    try {
+      await deleteDoc(doc(db, "parkingZones", zoneId, "slots", slotId));
+      return { success: true };
+    } catch (error) {
+      console.error("deleteSlot:", error.message);
       return { success: false, error: error.message };
     }
   },

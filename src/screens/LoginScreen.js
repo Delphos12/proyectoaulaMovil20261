@@ -1,18 +1,21 @@
 import { useState } from "react";
 import {
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import { useDispatch } from "react-redux";
-import { COLORS } from "../constants";
+import { useTheme } from "../hooks";
 import { getUserProfile, loginUser } from "../services/authService";
 import { setUser } from "../store";
 export default function LoginScreen({ navigation }) {
+  const { isDarkMode, colors } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,36 +75,52 @@ export default function LoginScreen({ navigation }) {
     setLoading(false);
   };
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>ParkSmart</Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.surface }]}
+    >
+      <View style={styles.logoContainer}>
+        <Image
+          source={require("../../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
       <View style={styles.formContainer}>
-        <Text style={styles.label}>Correo</Text>
+        <Text style={[styles.label, { color: colors.dark }]}>Correo</Text>
         <TextInput
           style={[
             styles.input,
-            focusedInput === "email" && styles.inputFocused,
-            errors.email && styles.inputError,
+            {
+              color: colors.dark,
+              backgroundColor: colors.white,
+              borderColor: colors.lightGray,
+              placeholderTextColor: colors.gray,
+            },
+            focusedInput === "email" && [
+              styles.inputFocused,
+              { borderColor: colors.primary },
+            ],
+            errors.email && [styles.inputError, { borderColor: colors.danger }],
           ]}
           placeholder="tu@email.com"
-          placeholderTextColor={COLORS.gray}
           value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
-          }}
+          onChangeText={setEmail}
           onFocus={() => setFocusedInput("email")}
           onBlur={() => {
             setFocusedInput(null);
             validateField("email", email);
           }}
-          keyboardType="email-address"
           autoCapitalize="none"
-          editable={!loading}
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          placeholderTextColor={colors.gray}
         />
         {errors.email ? (
-          <Text style={styles.errorText}>{errors.email}</Text>
+          <Text style={[styles.errorText, { color: colors.danger }]}>
+            {errors.email}
+          </Text>
         ) : null}
-        <Text style={styles.label}>Contraseña</Text>
+        <Text style={[styles.label, { color: colors.gray }]}>Contraseña</Text>
         <View style={styles.passwordContainer}>
           <TextInput
             style={[
@@ -109,52 +128,63 @@ export default function LoginScreen({ navigation }) {
               styles.passwordInput,
               focusedInput === "password" && styles.inputFocused,
               errors.password && styles.inputError,
+              {
+                color: colors.text,
+                backgroundColor: colors.white,
+                borderColor: colors.lightGray,
+              },
             ]}
-            placeholder="••••••••"
-            placeholderTextColor={COLORS.gray}
+            placeholder="Contraseña"
+            placeholderTextColor={colors.gray}
             value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (errors.password)
-                setErrors((prev) => ({ ...prev, password: "" }));
-            }}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
             onFocus={() => setFocusedInput("password")}
             onBlur={() => {
               setFocusedInput(null);
               validateField("password", password);
             }}
-            secureTextEntry={!showPassword}
-            editable={!loading}
+            textContentType="password"
           />
           <TouchableOpacity
             style={styles.eyeButton}
-            onPress={() => setShowPassword(!showPassword)}
-            disabled={loading}
+            onPress={() => setShowPassword((v) => !v)}
           >
             <FontAwesome5
               name={showPassword ? "eye-slash" : "eye"}
-              size={18}
-              color={COLORS.secondary}
+              size={20}
+              color={colors.gray}
             />
           </TouchableOpacity>
         </View>
         {errors.password ? (
-          <Text style={styles.errorText}>{errors.password}</Text>
+          <Text style={[styles.errorText, { color: colors.danger }]}>
+            {errors.password}
+          </Text>
         ) : null}
+        <TouchableOpacity
+          style={[
+            styles.button,
+            loading && styles.buttonDisabled,
+            { backgroundColor: colors.primary },
+          ]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={[styles.buttonText, { color: colors.white }]}>
+            {loading ? "Ingresando..." : "Ingresar"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Register")}
+          style={{ marginTop: 16 }}
+        >
+          <Text style={[styles.link, { color: colors.secondary }]}>
+            ¿No tienes cuenta? Regístrate
+          </Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Cargando..." : "Iniciar Sesión"}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
@@ -162,38 +192,46 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: COLORS.surface,
+    backgroundColor: "#F9FAFB",
   },
   title: {
     fontSize: 36,
     fontWeight: "800",
     textAlign: "center",
     marginBottom: 50,
-    color: COLORS.dark,
+    color: "#1F2937",
     letterSpacing: 0.5,
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  logo: {
+    width: 120,
+    height: 120,
   },
   formContainer: { marginBottom: 30 },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.gray,
+    color: "#6B7280",
     marginBottom: 8,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: COLORS.white,
+    backgroundColor: "#FFFFFF",
     padding: 14,
     borderRadius: 10,
     marginBottom: 6,
     borderWidth: 1.5,
-    borderColor: COLORS.lightGray,
+    borderColor: "#E5E7EB",
     fontSize: 16,
-    color: COLORS.dark,
+    color: "#1F2937",
   },
-  inputError: { borderColor: COLORS.danger },
+  inputError: { borderColor: "#FF3B30" },
   errorText: {
     fontSize: 12,
-    color: COLORS.danger,
+    color: "#FF3B30",
     marginBottom: 14,
     marginLeft: 4,
     fontWeight: "500",
@@ -210,13 +248,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   inputFocused: {
-    borderColor: COLORS.secondary,
+    borderColor: "#007AFF",
     borderWidth: 2,
     boxShadow: "0px 3px 6px rgba(0, 122, 255, 0.15)",
     elevation: 5,
   },
   button: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: "#007AFF",
     padding: 16,
     borderRadius: 10,
     marginTop: 10,
@@ -225,14 +263,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: {
-    color: COLORS.white,
+    color: "#FFFFFF",
     textAlign: "center",
     fontWeight: "700",
     fontSize: 16,
     letterSpacing: 0.5,
   },
   link: {
-    color: COLORS.secondary,
     textAlign: "center",
     marginTop: 20,
     fontSize: 14,

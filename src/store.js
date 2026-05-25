@@ -143,6 +143,31 @@ export const fetchHistoricReservations = createAsyncThunk(
   },
 );
 
+export const markReservationAsInUseThunk = createAsyncThunk(
+  "reservation/markInUse",
+  async ({ reservationId, userId }, { rejectWithValue, dispatch }) => {
+    const result =
+      await reservationService.markReservationAsInUse(reservationId);
+    if (!result.success) {
+      return rejectWithValue(result.error);
+    }
+    if (userId) dispatch(fetchReservations(userId));
+    return reservationId;
+  },
+);
+
+export const completeReservationThunk = createAsyncThunk(
+  "reservation/complete",
+  async ({ reservationId, userId }, { rejectWithValue, dispatch }) => {
+    const result = await reservationService.completeReservation(reservationId);
+    if (!result.success) {
+      return rejectWithValue(result.error);
+    }
+    if (userId) dispatch(fetchReservations(userId));
+    return reservationId;
+  },
+);
+
 const reservationSlice = createSlice({
   name: "reservation",
   initialState: {
@@ -150,9 +175,13 @@ const reservationSlice = createSlice({
     isLoading: false,
     isCreating: false,
     isCancelling: false,
+    isMarkingInUse: false,
+    isCompleting: false,
     error: null,
     createError: null,
     cancelError: null,
+    markInUseError: null,
+    completeError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -199,20 +228,72 @@ const reservationSlice = createSlice({
       .addCase(cancelReservationThunk.rejected, (state, action) => {
         state.cancelError = action.payload;
         state.isCancelling = false;
+      })
+      .addCase(markReservationAsInUseThunk.pending, (state) => {
+        state.isMarkingInUse = true;
+        state.markInUseError = null;
+      })
+      .addCase(markReservationAsInUseThunk.fulfilled, (state, action) => {
+        const reservation = state.reservations.find(
+          (r) => r.id === action.payload,
+        );
+        if (reservation) {
+          reservation.status = "in_use";
+        }
+        state.isMarkingInUse = false;
+        state.markInUseError = null;
+      })
+      .addCase(markReservationAsInUseThunk.rejected, (state, action) => {
+        state.markInUseError = action.payload;
+        state.isMarkingInUse = false;
+      })
+      .addCase(completeReservationThunk.pending, (state) => {
+        state.isCompleting = true;
+        state.completeError = null;
+      })
+      .addCase(completeReservationThunk.fulfilled, (state, action) => {
+        const reservation = state.reservations.find(
+          (r) => r.id === action.payload,
+        );
+        if (reservation) {
+          reservation.status = "completed";
+        }
+        state.isCompleting = false;
+        state.completeError = null;
+      })
+      .addCase(completeReservationThunk.rejected, (state, action) => {
+        state.completeError = action.payload;
+        state.isCompleting = false;
       });
   },
 });
 
+const themeSlice = createSlice({
+  name: "theme",
+  initialState: { isDarkMode: false },
+  reducers: {
+    toggleDarkMode(state) {
+      state.isDarkMode = !state.isDarkMode;
+    },
+    setDarkMode(state, action) {
+      state.isDarkMode = action.payload;
+    },
+  },
+});
+
+export const { toggleDarkMode, setDarkMode } = themeSlice.actions;
+
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["auth"],
+  whitelist: ["auth", "theme"],
 };
 
 const rootReducer = combineReducers({
   auth: authSlice.reducer,
   parking: parkingSlice.reducer,
   reservation: reservationSlice.reducer,
+  theme: themeSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
